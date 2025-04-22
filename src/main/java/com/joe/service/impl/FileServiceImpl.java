@@ -1,0 +1,41 @@
+package com.joe.service.impl;
+
+import com.joe.service.FileService;
+import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
+@Transactional
+@Service
+@Slf4j
+public class FileServiceImpl implements FileService {
+
+    @Override
+    public String uploadFileHandler(String path, MultipartFile file) throws IOException {
+        // Get the name of the file
+        String fileName = file.getOriginalFilename();
+
+        // Get the file path
+        String filePath = path + File.separator + fileName;
+
+        // Create file object
+        File file1 = new File(path);
+        if (!file1.exists())
+            file1.mkdir();
+        // upload file to the path
+        Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+        return fileName;
+    }
+
+    @Override
+    public InputStream getResourceFile(String path, String fileName) throws FileNotFoundException {
+        String filePath = path + File.separator + fileName;
+        return new FileInputStream(filePath);
+    }
+}

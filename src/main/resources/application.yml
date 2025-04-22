@@ -1,0 +1,30 @@
+server:
+  port: 8282
+
+logging:
+  level:
+    root: INFO
+    com.joe: DEBUG
+
+spring:
+  application:
+    name: movieflix
+  datasource:
+    url: jdbc:postgresql://localhost:5432/java_development_db
+    username: postgres
+    password: Bingo
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+project:
+  poster: poster/
+
+base:
+  url: "http://localhost:8282"
