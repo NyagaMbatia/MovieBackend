@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joe.dto.MovieDto;
 import com.joe.exception.MovieAlreadyExists;
+import com.joe.exception.MovieDoesNotExist;
 import com.joe.service.MovieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,10 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -33,8 +31,8 @@ public class MovieController {
     @PostMapping("v1/add-movie")
     @Operation(summary = "Adds the movie", description = "Uploads the movie")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved poster"),
-            @ApiResponse(responseCode = "401", description = "Not authorized to view poster"),
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved movie"),
+            @ApiResponse(responseCode = "401", description = "Not authorized to view movie"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     public ResponseEntity<MovieDto> uploadMovieHandler(
@@ -50,5 +48,16 @@ public class MovieController {
     private MovieDto convertToMovieDto(String movieDtoObj) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(movieDtoObj, MovieDto.class);
+    }
+
+    @GetMapping("v1/get-movie/{title}")
+    @Operation(summary = "Gets a specific movie by title")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved movie"),
+            @ApiResponse(responseCode = "401", description = "Not authorized to view movie"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    public ResponseEntity<MovieDto> getMovieByTitle(@PathVariable String title) throws MovieDoesNotExist {
+        return new ResponseEntity<>(movieService.getMovie(title), HttpStatus.OK);
     }
 }

@@ -3,6 +3,7 @@ package com.joe.service.impl;
 import com.joe.dto.MovieDto;
 import com.joe.entity.MovieEntity;
 import com.joe.exception.MovieAlreadyExists;
+import com.joe.exception.MovieDoesNotExist;
 import com.joe.mapper.MovieDtoToEntityMapper;
 import com.joe.repository.MovieRepository;
 import com.joe.service.FileService;
@@ -68,12 +69,27 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public MovieDto getMovie(String title) {
-        return null;
+    public MovieDto getMovie(String title) throws MovieDoesNotExist {
+        log.info("--------------- Getting the movie -----------------");
+        // 1. Get the movie details
+        MovieEntity existingMovie = movieRepository.findByTitle(title);
+        
+        // 2. Check if the movie exists
+        if(existingMovie == null)
+            throw new MovieDoesNotExist("No movie title with that name exists!");       
+        
+        // 3. Convert to dto
+        MovieDto movieDto = mapper.entityToDto(existingMovie);
+        log.info("--------------- Retrieved movie : {}", existingMovie);
+        // 4. Return The dto object
+        return movieDto;
     }
 
     @Override
     public List<MovieDto> getAllMovies() {
+        List<MovieEntity> allMovies = movieRepository.findAll();
+
+        // List<MovieDto> allMoviesDto =
         return List.of();
     }
 }
