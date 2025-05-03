@@ -15,7 +15,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -50,7 +54,7 @@ public class MovieServiceImpl implements MovieService {
 
         // 4. Save the movie object -> saved movie abject
         MovieEntity existingMovie = movieRepository.findByTitle(movieDto.getTitle());
-        if (!(existingMovie == null))
+        if (existingMovie != null)
             throw new MovieAlreadyExists("Movie with the same title exists, Please upload a new one");
 
         log.info("----------- saving movie --------------");
@@ -76,20 +80,87 @@ public class MovieServiceImpl implements MovieService {
         
         // 2. Check if the movie exists
         if(existingMovie == null)
-            throw new MovieDoesNotExist("No movie title with that name exists!");       
+            throw new MovieDoesNotExist("No movie title with that name exists!");
+
+        // 3. Generate the poster URL
+        String posterURL = baseUrl + "/api/file/v1/get-file/" + existingMovie.getPoster();
         
         // 3. Convert to dto
         MovieDto movieDto = mapper.entityToDto(existingMovie);
-        log.info("--------------- Retrieved movie : {}", existingMovie);
+        movieDto.setPosterURL(posterURL);
+        log.info("--------------- Retrieved movie : {}", existingMovie.getTitle());
         // 4. Return The dto object
         return movieDto;
     }
 
     @Override
     public List<MovieDto> getAllMovies() {
+        // 1. Fetch a list of movies from the database
         List<MovieEntity> allMovies = movieRepository.findAll();
 
-        // List<MovieDto> allMoviesDto =
-        return List.of();
+        // 2. Iterate through the list, generate posterURL for each movie and finally return a list of
+        // movie dto
+        List<MovieDto> allMoviesDto = new ArrayList<>();
+        for (MovieEntity movie : allMovies){
+            String posterURL = baseUrl + "/api/file/v1/get-file/" + movie.getPoster();
+            MovieDto movieDto = mapper.entityToDto(movie);
+            movieDto.setPosterURL(posterURL);
+            allMoviesDto.add(movieDto);
+        }
+
+        return allMoviesDto;
+    }
+
+    @Override
+    public String deleteAllMovies() {
+        movieRepository.deleteAll();
+        return "All movies have been successfully deleted";
+    }
+
+    @Override
+    public MovieDto updateMovieByTitle(String title, MovieDto movieDto, MultipartFile file) throws MovieDoesNotExist, IOException {
+        // 1. Check if movie exists
+        log.info("------------------ Checking if movie exists -------------");
+        MovieEntity isExistingMovie = movieRepository.findByTitle(title);
+        if(isExistingMovie == null)
+            throw new MovieDoesNotExist("The movie your are trying to update does not exists, create one instead");
+
+        Long id = isExistingMovie.getId();
+        // 2. Check if file exists, else upload new
+        String fileName = isExistingMovie.getPoster();
+        if (file != null) {
+            Files.deleteIfExists(Paths.get(path + File.separator + fileName));
+            fileService.uploadFileHandler(path, file);
+        }
+
+        // 3. Generate movie posterURL
+        String posterURL = baseUrl + "/api/file/v1/get-file/" + movieDto.getPoster();
+
+        // 4. Update the particular movie with the details
+        MovieEntity updatedMovie = mapper.dtoToEntity(movieDto);
+        log.info("------------------ Updating movie -------------");
+        updatedMovie.setId(id);
+        movieRepository.save(updatedMovie);
+
+        // 5. Map and Return our updated movieDTO
+        MovieDto updatedMovieDto = mapper.entityToDto(updatedMovie);
+        updatedMovieDto.setPosterURL(posterURL);
+        log.info("Updated movie title : {}", updatedMovieDto.getTitle());
+        return updatedMovieDto;
+    }
+
+    @Override
+    public String deleteMovieByTitle(String title) throws MovieDoesNotExist {
+        // 1. Check if movie with the provided title exists
+        MovieEntity isExists = movieRepository.findByTitle(title);
+
+        if (isExists == null){
+            throw new MovieDoesNotExist("No movie with that title exists, Please create a new one");
+        }
+
+        // 2. Delete the movie
+        movieRepository.deleteByTitle(title);
+        log.info("------------ Movie {} deleted successfully ------------", title);
+        return "Movie " + title + " deleted successfully";
     }
 }

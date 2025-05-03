@@ -9,7 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 
 @Transactional
 @Service
@@ -18,6 +17,10 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public String uploadFileHandler(String path, MultipartFile file) throws IOException {
+        // 1. Check if the file exists
+        if (Files.exists(Paths.get(path + File.separator + file.getOriginalFilename()))){
+            throw new RuntimeException("File already exists in that path");
+        }
         // Get the name of the file
         String fileName = file.getOriginalFilename();
 
@@ -29,7 +32,7 @@ public class FileServiceImpl implements FileService {
         if (!file1.exists())
             file1.mkdir();
         // upload file to the path
-        Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(file.getInputStream(), Paths.get(filePath));
         return fileName;
     }
 
