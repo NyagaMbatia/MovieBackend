@@ -1,5 +1,6 @@
 package com.joe.controller;
 
+import com.joe.exception.FileExistsException;
 import com.joe.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -34,7 +35,7 @@ public class FileController {
             @ApiResponse(responseCode = "401", description = "Not authorized to view poster"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    public ResponseEntity<String> uploadFile(@RequestPart MultipartFile file) throws IOException {
+    public ResponseEntity<String> uploadFile(@RequestPart MultipartFile file) throws IOException, FileExistsException {
         String fileName = fileService.uploadFileHandler(path, file);
         return ResponseEntity.ok(file.getOriginalFilename() + " Uploaded successfully");
     }

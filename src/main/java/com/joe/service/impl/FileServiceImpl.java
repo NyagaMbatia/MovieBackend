@@ -1,5 +1,7 @@
 package com.joe.service.impl;
 
+import com.joe.exception.EmptyFileException;
+import com.joe.exception.FileExistsException;
 import com.joe.service.FileService;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -16,10 +19,14 @@ import java.nio.file.Paths;
 public class FileServiceImpl implements FileService {
 
     @Override
-    public String uploadFileHandler(String path, MultipartFile file) throws IOException {
+    public String uploadFileHandler(String path, MultipartFile file) throws IOException, EmptyFileException, FileExistsException {
+        // 1. Check if file has been provided
+        if (file.isEmpty()){
+            throw new EmptyFileException("File is empty, Please add a file!");
+        }
         // 1. Check if the file exists
         if (Files.exists(Paths.get(path + File.separator + file.getOriginalFilename()))){
-            throw new RuntimeException("File already exists in that path");
+            throw new FileExistsException("File already exists in that path");
         }
         // Get the name of the file
         String fileName = file.getOriginalFilename();

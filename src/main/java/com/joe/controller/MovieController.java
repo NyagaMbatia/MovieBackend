@@ -3,9 +3,12 @@ package com.joe.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joe.dto.MovieDto;
+import com.joe.dto.MoviePageResponse;
+import com.joe.exception.FileExistsException;
 import com.joe.exception.MovieAlreadyExists;
 import com.joe.exception.MovieDoesNotExist;
 import com.joe.service.MovieService;
+import com.joe.utils.AppConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -36,7 +39,7 @@ public class MovieController {
             @ApiResponse(responseCode = "401", description = "Not authorized to view movie"),
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
-    public ResponseEntity<MovieDto> uploadMovieHandler(@RequestPart MultipartFile file, @RequestPart String movieDto) throws IOException, MovieAlreadyExists {
+    public ResponseEntity<MovieDto> uploadMovieHandler(@RequestPart MultipartFile file, @RequestPart String movieDto) throws IOException, MovieAlreadyExists, FileExistsException {
         log.info("----------- Successfully called controller endpoint ----------");
         MovieDto dto = convertToMovieDto(movieDto);
         return new ResponseEntity<>(movieService.addMovie(dto, file), HttpStatus.CREATED);
@@ -70,6 +73,37 @@ public class MovieController {
         return new ResponseEntity<>(movieService.getAllMovies(), HttpStatus.OK);
     }
 
+    @GetMapping("v1/get-paginated-movies")
+    @Operation(summary = "Gets all movies with pagination")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved movies"),
+            @ApiResponse(responseCode = "401", description = "Not authorized to view movies"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    public ResponseEntity<MoviePageResponse> getAllMoviesWithPaginationHandler(
+            @RequestParam (defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam (defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize
+    ){
+        return ResponseEntity.ok(movieService.getAllMoviesWithPagination(pageNumber, pageSize));
+    }
+
+    @GetMapping("v1/get-paginated-and-sorted-movies")
+    @Operation(summary = "Gets all movies with pagination and sorting")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved movies"),
+            @ApiResponse(responseCode = "401", description = "Not authorized to view movies"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    public ResponseEntity<MoviePageResponse> getAllMoviesWithPaginationAndSortingHandler(
+            @RequestParam (defaultValue = AppConstants.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam (defaultValue = AppConstants.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam (defaultValue = AppConstants.SORT_BY, required = false) String sortBy,
+            @RequestParam (defaultValue = AppConstants.SORT_DIR, required = false) String sortDir
+    ){
+        return ResponseEntity.ok(movieService.getAllMoviesWithPaginationAndSorting(pageNumber, pageSize, sortBy, sortDir));
+    }
+
+
     @PutMapping("v1/update-movie/{title}")
     @Operation(summary = "Updates a single movie details")
     @ApiResponses(value = {
@@ -80,7 +114,7 @@ public class MovieController {
     public ResponseEntity<MovieDto> updateMovieHandler(@PathVariable String title,
                                                        @RequestPart String movieDto,
                                                        @RequestPart MultipartFile file)
-            throws MovieDoesNotExist, IOException {
+            throws MovieDoesNotExist, IOException, FileExistsException {
         MovieDto dto = convertToMovieDto(movieDto);
         return new ResponseEntity<>((MovieDto) movieService.updateMovieByTitle(title, dto, file), HttpStatus.OK);
 

@@ -1,8 +1,7 @@
 package com.joe.exception;
 
-import com.joe.dto.MovieDto;
-
-public class MovieDoesNotExist extends Exception {
-    public MovieDoesNotExist(String s) {
+public class MovieDoesNotExist extends RuntimeException {
+    public MovieDoesNotExist(String message) {
+        super(message);
     }
 }

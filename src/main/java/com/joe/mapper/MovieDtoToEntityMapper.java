@@ -4,13 +4,15 @@ import com.joe.dto.MovieDto;
 import com.joe.entity.MovieEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.Locale;
+
 @Component
 public class MovieDtoToEntityMapper {
 
     public MovieEntity dtoToEntity(MovieDto movieDto){
         return MovieEntity.builder()
                 .director(movieDto.getDirector())
-                .title(movieDto.getTitle())
+                .title(movieDto.getTitle().toLowerCase())
                 .poster(movieDto.getPoster())
                 .studio(movieDto.getStudio())
                 .posterURL(movieDto.getPosterURL())
@@ -23,7 +25,7 @@ public class MovieDtoToEntityMapper {
         return MovieDto.builder()
                 .director(movieEntity.getDirector())
                 .id(movieEntity.getId())
-                .title(movieEntity.getTitle())
+                .title(movieEntity.getTitle().toLowerCase())
                 .movieCast(movieEntity.getMovieCast())
                 .poster(movieEntity.getPoster())
                 .posterURL(movieEntity.getPosterURL())

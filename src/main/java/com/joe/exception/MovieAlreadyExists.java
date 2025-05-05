@@ -1,6 +1,7 @@
 package com.joe.exception;
 
-public class MovieAlreadyExists extends Exception {
-    public MovieAlreadyExists(String s) {
+public class MovieAlreadyExists extends RuntimeException {
+    public MovieAlreadyExists(String message) {
+        super(message);
     }
 }

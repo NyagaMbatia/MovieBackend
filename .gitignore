@@ -12,7 +12,6 @@ build/
 .mvn/
 mvnw
 mvnw.cmd
-scratch.json
 
 # Logs
 logs/
@@ -26,3 +25,8 @@ src/main/resources/application-*.yml
 
 # Misc
 .DS_Store
+
+# my dev files
+scratch.json
+poster
+my-notes

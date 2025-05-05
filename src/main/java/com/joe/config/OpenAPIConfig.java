@@ -13,7 +13,7 @@ public class OpenAPIConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("My API")
+                        .title("Movie Backend API")
                         .version("1.0")
                         .description("API Documentation")
                         .contact(new Contact()

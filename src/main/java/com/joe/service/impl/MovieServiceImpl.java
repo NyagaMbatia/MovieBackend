@@ -1,7 +1,9 @@
 package com.joe.service.impl;
 
 import com.joe.dto.MovieDto;
+import com.joe.dto.MoviePageResponse;
 import com.joe.entity.MovieEntity;
+import com.joe.exception.FileExistsException;
 import com.joe.exception.MovieAlreadyExists;
 import com.joe.exception.MovieDoesNotExist;
 import com.joe.mapper.MovieDtoToEntityMapper;
@@ -12,6 +14,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -40,9 +47,13 @@ public class MovieServiceImpl implements MovieService {
     private final MovieDtoToEntityMapper mapper;
 
     @Override
-    public MovieDto addMovie(MovieDto movieDto, MultipartFile file) throws MovieAlreadyExists, IOException {
+    public MovieDto addMovie(MovieDto movieDto, MultipartFile file) throws MovieAlreadyExists, IOException, FileExistsException {
         log.info("---------- add movie method call started -----------------------");
-        // 1. Upload the file
+        String titleLowerCase = movieDto.getTitle().toLowerCase();
+        // 1. Check if file exists and Upload the file, else throw exception
+        if (Files.exists(Paths.get(path + File.separator + file.getOriginalFilename())))
+            throw new FileExistsException("Movie registered with the same poster already exists, Please change the poster or rename it");
+
         String uploadedFileName = fileService.uploadFileHandler(path, file);
         log.info("File name is : {}", uploadedFileName);
 
@@ -53,7 +64,7 @@ public class MovieServiceImpl implements MovieService {
          MovieEntity requestedMovie = mapper.dtoToEntity(movieDto);
 
         // 4. Save the movie object -> saved movie abject
-        MovieEntity existingMovie = movieRepository.findByTitle(movieDto.getTitle());
+        MovieEntity existingMovie = movieRepository.findByTitle(titleLowerCase);
         if (existingMovie != null)
             throw new MovieAlreadyExists("Movie with the same title exists, Please upload a new one");
 
@@ -76,11 +87,13 @@ public class MovieServiceImpl implements MovieService {
     public MovieDto getMovie(String title) throws MovieDoesNotExist {
         log.info("--------------- Getting the movie -----------------");
         // 1. Get the movie details
-        MovieEntity existingMovie = movieRepository.findByTitle(title);
+        String titleLowerCase = title.toLowerCase();
+        log.info("---------------- Converted title : {} ------------------", titleLowerCase);
+        MovieEntity existingMovie = movieRepository.findByTitle(titleLowerCase);
         
         // 2. Check if the movie exists
         if(existingMovie == null)
-            throw new MovieDoesNotExist("No movie title with that name exists!");
+            throw new MovieDoesNotExist("No movie named " + title + " exists!");
 
         // 3. Generate the poster URL
         String posterURL = baseUrl + "/api/file/v1/get-file/" + existingMovie.getPoster();
@@ -95,20 +108,14 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public List<MovieDto> getAllMovies() {
-        // 1. Fetch a list of movies from the database
-        List<MovieEntity> allMovies = movieRepository.findAll();
-
-        // 2. Iterate through the list, generate posterURL for each movie and finally return a list of
-        // movie dto
-        List<MovieDto> allMoviesDto = new ArrayList<>();
-        for (MovieEntity movie : allMovies){
-            String posterURL = baseUrl + "/api/file/v1/get-file/" + movie.getPoster();
-            MovieDto movieDto = mapper.entityToDto(movie);
-            movieDto.setPosterURL(posterURL);
-            allMoviesDto.add(movieDto);
-        }
-
-        return allMoviesDto;
+        // 1. Fetch a list of movies from the database. Stream through the list, generate posterURL for each movie and finally return a list of
+        return movieRepository.findAll().stream()
+                .map(movie -> {
+                    MovieDto movieDto = mapper.entityToDto(movie);
+                    movieDto.setPosterURL(baseUrl + "/api/file/v1/get-file/" + movie.getPoster());
+                    return movieDto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -118,10 +125,11 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public MovieDto updateMovieByTitle(String title, MovieDto movieDto, MultipartFile file) throws MovieDoesNotExist, IOException {
+    public MovieDto updateMovieByTitle(String title, MovieDto movieDto, MultipartFile file) throws MovieDoesNotExist, IOException, FileExistsException {
+        String lowerCaseTitle = title.toLowerCase();
         // 1. Check if movie exists
         log.info("------------------ Checking if movie exists -------------");
-        MovieEntity isExistingMovie = movieRepository.findByTitle(title);
+        MovieEntity isExistingMovie = movieRepository.findByTitle(lowerCaseTitle);
         if(isExistingMovie == null)
             throw new MovieDoesNotExist("The movie your are trying to update does not exists, create one instead");
 
@@ -162,5 +170,52 @@ public class MovieServiceImpl implements MovieService {
         movieRepository.deleteByTitle(title);
         log.info("------------ Movie {} deleted successfully ------------", title);
         return "Movie " + title + " deleted successfully";
+    }
+
+    @Override
+    public MoviePageResponse getAllMoviesWithPagination(Integer pageNumber, Integer pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        Page<MovieEntity> moviePages = movieRepository.findAll(pageable);
+        List<MovieEntity> movies = moviePages.getContent();
+
+        List<MovieDto> allMoviesDto = movies.stream()
+                .map(movie -> {
+                    MovieDto movieDto = mapper.entityToDto(movie);
+                    movieDto.setPosterURL(baseUrl + "/api/file/v1/get-file/" + movie.getPoster());
+                    return movieDto;
+                })
+                .toList();
+
+        return new MoviePageResponse(allMoviesDto, pageNumber, pageSize,
+                moviePages.getTotalElements(),
+                moviePages.getTotalPages(),
+                moviePages.isLast());
+    }
+
+    @Override
+    public MoviePageResponse getAllMoviesWithPaginationAndSorting(Integer pageNumber, Integer pageSize, String sortBy, String sortDir) {
+        // 1 : Sorts the resultset by ascending on default otherwise uses descending
+        Sort.Direction direction = sortDir.equalsIgnoreCase("desc")
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+
+        Sort sort = Sort.by(direction, sortBy);
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<MovieEntity> moviePages = movieRepository.findAll(pageable);
+        List<MovieEntity> movies = moviePages.getContent();
+
+        List<MovieDto> allMoviesDto = movies.stream()
+                .map(movie -> {
+                    MovieDto movieDto = mapper.entityToDto(movie);
+                    movieDto.setPosterURL(baseUrl + "/api/file/v1/get-file/" + movie.getPoster());
+                    return movieDto;
+                })
+                .toList();
+
+        return new MoviePageResponse(allMoviesDto, pageNumber, pageSize,
+                moviePages.getTotalElements(),
+                moviePages.getTotalPages(),
+                moviePages.isLast());
     }
 }
