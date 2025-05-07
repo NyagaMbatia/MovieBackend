@@ -1,4 +1,4 @@
-package com.joe.auth;
+package com.joe.auth.entity;
 
 public enum UserRole {
     USER,

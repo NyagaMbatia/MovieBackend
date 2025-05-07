@@ -26,7 +26,7 @@ src/main/resources/application-*.yml
 # Misc
 .DS_Store
 
-# my dev files
-scratch.json
+# my files
 poster
+scratch.json
 my-notes
