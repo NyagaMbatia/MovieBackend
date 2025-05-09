@@ -3,8 +3,6 @@ package com.joe.auth.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -35,8 +33,8 @@ public class UserEntity implements UserDetails {
     @NotBlank(message = "Name cannot be blank")
     private String userName;
 
-    @Size(message = "Password cannot be less than 7 or greater than 15", min = 7, max = 15)
-    @Pattern(message = "Password should be alphanumeric", regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$ ")
+//    @Size(message = "Password cannot be less than 7 or greater than 15", min = 7, max = 15)
+//    @Pattern(message = "Password should be alphanumeric", regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$ ")
     @NotBlank(message = "Name cannot be blank")
     private String password;
 
@@ -52,14 +50,13 @@ public class UserEntity implements UserDetails {
     @Column(updatable = false, name = "created_at")
     private Date createdAt;
 
+    @Column(name = "name")
+    @NotBlank(message = "Please provide your name")
+    private String name;
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Date updatedAt;
-
-    private boolean isEnabled = true;
-    private boolean isCredentialsNonExpired = true;
-    private boolean isAccountNonLocked = true;
-    private Boolean isAccountNonExpired = true;
 
     @Enumerated(EnumType.STRING)
     private UserRole role;
@@ -81,21 +78,21 @@ public class UserEntity implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return isAccountNonExpired;
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return isAccountNonLocked;
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return isCredentialsNonExpired;
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return isEnabled;
+        return true;
     }
 }

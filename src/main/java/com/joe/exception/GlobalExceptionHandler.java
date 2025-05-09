@@ -27,4 +27,19 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleFileExistsException(FileExistsException exception){
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
+
+    @ExceptionHandler(CustomUsernameNotFoundException.class)
+    public ProblemDetail handleCustomUsernameNotFoundException(CustomUsernameNotFoundException exception){
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(RefreshTokenExpiredException.class)
+    public ProblemDetail handleRefreshTokenExpiredException(RefreshTokenExpiredException exception){
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler(RefreshTokenNotFoundException.class)
+    public ProblemDetail handleRefreshTokenNotFoundException(RefreshTokenNotFoundException exception){
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
 }

@@ -4,6 +4,9 @@ import com.joe.auth.entity.RefreshToken;
 import com.joe.auth.entity.UserEntity;
 import com.joe.auth.repository.RefreshTokenRepository;
 import com.joe.auth.repository.UserRepository;
+import com.joe.exception.CustomUsernameNotFoundException;
+import com.joe.exception.RefreshTokenExpiredException;
+import com.joe.exception.RefreshTokenNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -23,7 +26,7 @@ public class RefreshTokenService {
     public RefreshToken createRefreshToken(String email) {
         // 1. Check if the user exists
         UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("No user registered with email: " + email));
+                .orElseThrow(() -> new CustomUsernameNotFoundException("No user registered with email: " + email));
 
         // 2. Get the existing refresh token
         RefreshToken refreshToken = user.getRefreshToken();
@@ -44,11 +47,11 @@ public class RefreshTokenService {
     // 4. We check if the refresh token exists and expired else return it
     public RefreshToken verifyRefreshToken(String refreshToken){
         RefreshToken refreshToken1 = refreshTokenRepository.findByRefreshToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("Token not found!"));
+                .orElseThrow(() -> new RefreshTokenNotFoundException("Token not found!"));
 
         if (refreshToken1.getExpirationTime().compareTo(Instant.now()) < 0){
             refreshTokenRepository.delete(refreshToken1);
-            throw new RuntimeException("Token is expired!");
+            throw new RefreshTokenExpiredException("Token is expired!");
         }
 
         return refreshToken1;

@@ -19,7 +19,7 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    @NotBlank(message = "Token Expiration time should be present")
+    // @NotBlank(message = "Token Expiration time should be present")
     private Instant expirationTime;
 
     @Column(length = 500)
