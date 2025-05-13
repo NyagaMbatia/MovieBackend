@@ -42,4 +42,9 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleRefreshTokenNotFoundException(RefreshTokenNotFoundException exception){
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
+
+    @ExceptionHandler(CustomBadCredentialsException.class)
+    public ProblemDetail handleCustomBadCredentialsException(CustomBadCredentialsException exception){
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
 }
