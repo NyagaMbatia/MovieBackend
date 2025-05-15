@@ -31,7 +31,7 @@ This is a Spring Boot backend application for managing movie data, providing RES
 
 ### Installation & Setup
 Clone the repository: 
-* `git clone https://github.com/yourusername/movie-backend.git` 
+* `git clone https://github.com/NyagaMbatia/movie-backend.git` 
 * `cd movie-backend`
 
 ### Configure database:
