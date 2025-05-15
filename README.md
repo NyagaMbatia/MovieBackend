@@ -31,7 +31,7 @@ This is a Spring Boot backend application for managing movie data, providing RES
 
 ### Installation & Setup
 Clone the repository: 
-* `git clone https://github.com/NyagaMbatia/movie-backend.git` 
+* `git clone https://github.com/NyagaMbatia/MovieBackend.git` 
 * `cd movie-backend`
 
 ### Configure database:
@@ -55,7 +55,7 @@ This will start:
 * (Optional) pgAdmin for database management
 
 ## Configuration
-Key configuration options (in application.properties or application.yml):
+Key configuration options (application.yml):
 ### Database
 * spring.datasource.url=jdbc:postgresql://localhost:5432/moviedb
 * spring.datasource.username=postgres
@@ -99,6 +99,7 @@ src/
 * DELETE /api/movies/{id} - Delete a movie
 * GET /api/movies/search?title={title} - Search movies by title
 * GET /api/genres - Get all genres
+* 
 
 Contributing: Contributions are welcome! Please follow these steps:
 
@@ -119,4 +120,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For questions or support, please contact:
 
 Joe Mbatia - joembatiadev@gmail.com
-Project Link: https://github.com/yourusername/movie-backend
+Project Link: https://github.com/NyagaMbatia/MovieBackend
